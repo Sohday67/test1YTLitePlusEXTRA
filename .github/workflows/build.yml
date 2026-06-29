@@ -51,7 +51,7 @@ concurrency:
 jobs:
   build:
     name: Build YTLitePlusEXTRA IPA
-    runs-on: macos-latest
+    runs-on: macos-15
     permissions:
       contents: write
 
@@ -84,7 +84,12 @@ jobs:
           echo "YT_VERSION=$(grep -A 1 '<key>CFBundleVersion</key>' ytextracted/Payload/YouTube.app/Info.plist | grep '<string>' | awk -F'[><]' '{print $3}')" >> $GITHUB_ENV
 
       - name: Install Dependencies
-        run: brew install make ldid swiftlint
+        run: |
+          brew untap aws/tap || true
+          brew install make ldid swiftlint
+
+      - name: Select Xcode 16.4
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
 
       - name: Set PATH Environment Variables
         run: |
