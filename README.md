@@ -1,24 +1,30 @@
 # YTLitePlusEXTRA
-This is a fork repo from YTLite,but add more tweaks similar to YTLitePlus for who can't build IPA or The app is unusable.
+This is a fork repo from YTLite but adds more tweaks similar to YTLitePlus for those who can't build IPA or The app is unusable.
 If you have any problems, feel free to open issues!
 
-**EDIT:** THANKS FOR 100 FORKS!🥳🎉🙏
+> [!WARNING]
+> In the latest YTLite version (5.2), you have to be a member in the developer's patron [here](https://www.patreon.com/c/dayanch96/membership). 
+> Otherwise, you **CAN'T** use YTLite.
+> If you can't / don't want to be a member, temporarily use YTLite version 5.2b4 for now.
+
+**EDIT:** THANKS FOR 270 FORKS!🥳🎉🙏
 
 **NOTE:** Before you open a new issue, please check in [FAQs](FAQs.md) first and make sure your issue doesn't have in it.
 
 ## Main features
-- [YTLite](https://github.com/dayanch96/YTLite) - eg. Download Videos,No ads,Background Playback
-- [YouTimeStamp](https://github.com/Sohday67/YouTimeStamp) - Video timestamp controls
-- [YouHideIsland](https://github.com/middsave/YouHideIsland) - Hide the Dynamic Island in YouTube
-- [YTSkipSilence](https://github.com/Sohday67/test5silence) - Skip silent segments in videos (Overcast-style), with a toggle in the video overlay
-- And much more...
+- [YTLite](https://github.com/dayanch96/YTLite) - eg. Download Videos, No ads, Background Playback
+- [YTABConfig](https://github.com/PoomSmart/YTABConfig) - Configures A/B settings
+- [YouShare](https://github.com/Tonwalter888/YouShare) - Copy video URL faster from video overlay
+- [YTweaks](https://github.com/fosterbarnes/YTweaks) - Hide AI summary, Fix casting and more
+- [YouHideIsland](https://github.com/Sohday67/YouHideIsland) - Hides the Dynamic Island "Now Playing" indicator while YouTube is in the foreground
+- [YTSkipSilence](https://github.com/Sohday67/test5silence) - Adds a "Skip Silence" toggle to the video overlay, porting Overcast's smart silence-skipping behavior to YouTube
 
 ## How to build a YTLitePlusEXTRA IPA using Github Actions
 > [!NOTE]
-> If this your first time, complete following steps before starting:
+> If this is your first time, complete the following steps before starting:
 >
 > 1. Fork this repository using the fork button on the top right
-> 2. On your forked repository, go to **Settings** -> **Actions**, and enable **Read and Write** permissions.
+> 2. In your forked repository, go to **Settings** -> **Actions**, and enable **Read and Write** permissions.
 
 <details>
   <summary>How to build a YTLitePlusEXTRA IPA</summary>
@@ -51,7 +57,7 @@ If you have any problems, feel free to open issues!
 
 ## Supported YouTube version
 <ul>
-   <li><strong>Latest confirmed:</strong> 21.05.3</li>
-   <li><strong>Date tested:</strong> Feb 7, 2026</li>
-   <li><strong>YTLite:</strong> 5.2 beta 4</li>
+   <li><strong>Latest confirmed:</strong> 21.15.5</li>
+   <li><strong>Date tested:</strong> Apr 20, 2026</li>
+   <li><strong>YTLite:</strong> 5.2</li>
 </ul>

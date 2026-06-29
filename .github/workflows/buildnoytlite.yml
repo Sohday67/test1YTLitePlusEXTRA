@@ -1,15 +1,9 @@
-name: (Pre-Release) Build YTLitePlusEXTRA IPA
+name: Build IPA without YTLite
 on:
   workflow_dispatch:
     inputs:
       ipa_url:
         description: "URL to the decrypted IPA file"
-        default: ""
-        required: true
-        type: string
-
-      deb_url:
-        description: "URL to your YTLite .deb file"
         default: ""
         required: true
         type: string
@@ -44,7 +38,7 @@ concurrency:
 
 jobs:
   build:
-    name: (Pre-Release) Build YTLitePlusEXTRA IPA
+    name: Build IPA without YTLite
     runs-on: macos-latest
     permissions:
       contents: write
@@ -59,13 +53,13 @@ jobs:
         run: |
           wget "${{ inputs.ipa_url }}" --quiet --no-verbose -O youtube.ipa
 
-          ipa_type=$(file --mime-type -b youtube.ipa)
+          file_type=$(file --mime-type -b youtube.ipa)
 
-          if [[ "$ipa_type" != "application/x-ios-app" && "$ipa_type" != "application/zip" ]]; then
-            echo "::error::Validation failed: The downloaded file is not a valid IPA. Detected type: $ipa_type."
+          if [[ "$file_type" != "application/x-ios-app" && "$file_type" != "application/zip" ]]; then
+            echo "::error::Validation failed: The downloaded file is not a valid IPA. Detected type: $file_type."
             exit 1
           fi
- 
+
       - name: Get YouTube Version 
         run: |
           unzip -q youtube.ipa -d ytextracted
@@ -81,7 +75,7 @@ jobs:
 
       - name: Clone Theos
         run: git clone --quiet --depth=1 --recurse-submodules https://github.com/theos/theos.git
-        
+           
       - name: Download iOS SDK
         run: |
           git clone --quiet --depth=1 -n --filter=tree:0 https://github.com/Tonwalter888/iOS-SDKs.git
@@ -95,25 +89,7 @@ jobs:
           pipx install --force https://github.com/asdfzxcvbn/pyzule-rw/archive/main.zip
           wget --quiet --no-verbose "https://github.com/inoahdev/tbd/releases/download/2.2/tbd-mac" -O /usr/local/bin/tbd
           chmod +x /usr/local/bin/tbd 
-
-      - name: Download and Validate your YTLite .deb 
-        run: |
-          wget "${{ inputs.deb_url }}" --quiet --no-verbose -O ytlite.deb
-
-          deb_type=$(file --mime-type -b ytlite.deb)
-
-          if [[ "$deb_type" != "application/vnd.debian.binary-package" ]]; then
-            echo "::error::Validation failed: The downloaded file is not a valid deb. Detected type: $deb_type."
-            exit 1
-          fi
-
-      - name: Get YTLite Version
-        run: |
-          ar x ytlite.deb control.tar.gz >/dev/null 2>&1
-          tar -xzf control.tar.gz ./control
-          VERSION=$(grep '^Version:' control | cut -d ' ' -f2)
-          echo "YTLITE_VERSION=$VERSION" >> $GITHUB_ENV
-
+          
       - name: Clone Open in YouTube (Safari Extension)
         run: |
           git clone --quiet -n --depth=1 --filter=tree:0 https://github.com/BillyCurtis/OpenYouTubeSafariExtension.git
@@ -298,24 +274,24 @@ jobs:
             tweaks="$tweaks $f"
           done
           
-          cyan -i youtube.ipa -o YTLitePlusEXTRA_${{ env.YT_VERSION }}_v${{ env.YTLITE_VERSION }}.ipa -uwef $tweaks -n "${{ inputs.display_name }}" -b ${{ inputs.bundle_id }}
+          cyan -i youtube.ipa -o YTLitePlusEXTRA_NoYTLite_${{ env.YT_VERSION }}.ipa -uwef $tweaks -n "${{ inputs.display_name }}" -b ${{ inputs.bundle_id }}
 
       - name: Create a Draft Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ytliteplusextra-pre-release-ipa${{ github.run_number }}
-          name: YTLitePlusEXTRA_${{ env.YT_VERSION }}_v${{ env.YTLITE_VERSION }} (${{ github.run_number }}) 
-          files: YTLitePlusEXTRA_${{ env.YT_VERSION }}_v${{ env.YTLITE_VERSION }}.ipa
+          tag_name: ytliteplusextra-ipa-noytlite${{ github.run_number }}
+          name: YTLitePlusEXTRA_NoYTLite_${{ env.YT_VERSION }} (${{ github.run_number }}) 
+          files: YTLitePlusEXTRA_NoYTLite_${{ env.YT_VERSION }}.ipa
           draft: true
 
       - name: Job Summary - Build Complete
         run: |
-          echo -e '### 🛠️ Build YTLitePlusEXTRA IPA Complete!' >> $GITHUB_STEP_SUMMARY
+          echo -e '### 🛠️ Build IPA wtihout YTLite Complete!' >> $GITHUB_STEP_SUMMARY
 
       - name: Job Summary - Output the Draft Release Link
         run: |
-          echo -e '### 🚀 Draft Release\n\nDraft release has been created successfully! You can view your release here: https://github.com/${{ github.repository }}/releases' >> $GITHUB_STEP_SUMMARY
-     
+          echo -e '### 🚀 Draft Release\n\nDraft release has been created successfully! You can view your release here: https://github.com/${{ github.repository }}/releases' >> $GITHUB_STEP_SUMMARY     
+          
       - name: Job Summary - Cleanup
         run: |
           echo -e '### 🧹 Cleanup\n\nYou can remove previous GitHub Actions run here: https://github.com/${{ github.repository }}/actions/workflows/delete-old-workflows-run.yml And if you want to delelte old draft releases you have then here: https://github.com/${{ github.repository }}/actions/workflows/delete-old-draft-releases.yml' >> $GITHUB_STEP_SUMMARY

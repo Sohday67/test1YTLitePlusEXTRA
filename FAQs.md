@@ -3,9 +3,11 @@
 <details>
   <summary>What iOS versions does YTLitePlusEXTRA support?</summary>
     <p>YTLitePlusEXTRA supports iOS 14 and above. <strong>However</strong>, if you're sideloading it on a non-jailbroken device, you must also consider the YouTube app's compatibility with your iOS version. Below is a list of the latest supported YouTube versions per iOS:</p>
-    <li><strong>iOS 14</strong>: YouTube 19.20.2</li>
+    <li><strong>iOS 14</strong>: YouTube 19.20.2 (Outdated, unsupported by YouTube)</li>
     <li><strong>iOS 15</strong>: YouTube 20.21.6</li>
     <li><strong>iOS 16 or Higher</strong>: Any version, as long as supported by YouTube</li>
+    <p></p>
+    <p>If you want to use YouTube in iOS 14, please install/inject <a href="https://github.com/PoomSmart/YouTubeLegacy">YouTubeLegacy</a> by PoomSmart along with other tweaks.</p>
 </details>
 <br>
 <details>
@@ -14,24 +16,15 @@
 </details>
 <br>
 <details>
-  <summary>Cast stopped working on sideloaded YTLitePlusEXTRA. What should I do?</summary>
-    <p>Until this issue is resolved, it is recommended to use YouTube version 20.14.1 or below.</p>
-</details>
-<br>
-<details>
-  <summary>YouTube video loop settings and the button don't work. What should I do?</summary>
-    <p>This is a known issue. Try using the built-in loop feature through long-pressing the video or checking YTLite settings.</p>
-</details>
-<br>
-<details>
   <summary>When I try to play a video, I get "<strong>Something went wrong. Refresh and try again later.</strong>" error.</summary>
     <p>Before jumping to conclusions:</p>
       <p>This is <strong>NOT</strong> caused by ad blocking.</p>
-    <p>The issue is your account gets YouTube banned or flagged. Try avaliable workarounds below.</p>
-    <p><strong>Avaliable Workarounds</strong></p>
+        <p>This is <strong>NOT</strong> because your account was magically flagged.</p>
+      <p>This is <strong>NOT</strong> due to your account being secretly blacklisted.</p>
+    <p>The issue seems to lie on YouTube's PoToken security guard as suggested <a href="https://github.com/Tonwalter888/YTLitePlusEXTRA/issues/14#issuecomment-3924514916">here</a>.</p>
+    <p><strong>Possible temporary workarounds</strong></p>
     <p>Try one of these:</p>
-      <li>Use YouTube version 19.49.5 or below. But you may get "<strong>This content isn't available, try again later.</strong>" error instead.</li>
-      <li>Sign out from your Google account and watch YouTube without signing in.</li>
-      <li>Use your other Google accounts. If you haven't got some, create a new one.</li>
-      <li>Use YouTube version 20.25.4 and turn on Legacy PiP in YouPiP settings. But you will lose PiP functionality.</li>
+      <li>Sign out from your Google account and watch videos without signing in.</li>
+      <li>Use your other Google accounts. If you haven't got any, create a new one.</li>
+      <li>Turns on <strong>Fix playback issues</strong> in YTUHD settings.</li>
 </details>
