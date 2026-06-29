@@ -134,6 +134,49 @@ jobs:
 
       - name: Clone YouPiP
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/YouPiP.git
+
+
+      - name: Patch YouPiP for current Logos/clang
+        run: |
+          python3 - <<'PY_PATCH'
+          from pathlib import Path
+
+          def replace_maybe(text, old, new, label):
+              count = text.count(old)
+              if count == 1:
+                  return text.replace(old, new, 1)
+              if new in text:
+                  print(f"{label} already patched")
+                  return text
+              print(f"::warning::Could not find {label}; upstream YouPiP may already have changed")
+              return text
+
+          legacy = Path("YouPiP/LegacyPiPCompat.x")
+          text = legacy.read_text()
+          text = replace_maybe(
+              text,
+              "return initPlayerPiPControllerIfNeeded(%orig, delegate, nil);",
+              "YTPlayerPIPController *controller = %orig;" + chr(10) + "    return initPlayerPiPControllerIfNeeded(controller, delegate, nil);",
+              "initWithDelegate",
+          )
+          text = replace_maybe(
+              text,
+              "return initPlayerPiPControllerIfNeeded(%orig, delegate, parentResponder);",
+              "YTPlayerPIPController *controller = %orig;" + chr(10) + "    return initPlayerPiPControllerIfNeeded(controller, delegate, parentResponder);",
+              "initWithDelegate:parentResponder",
+          )
+          legacy.write_text(text)
+
+          settings = Path("YouPiP/Settings.x")
+          text = settings.read_text()
+          text = replace_maybe(
+              text,
+              "NSMutableArray *mutableCategories = %orig.mutableCopy;",
+              "NSArray *categories = %orig;" + chr(10) + "    NSMutableArray *mutableCategories = categories.mutableCopy;",
+              "orderedCategories mutable copy",
+          )
+          settings.write_text(text)
+          PY_PATCH
     
       - name: Clone YTUHD
         run: git clone --quiet --depth=1 https://github.com/Tonwalter888/YTUHD.git
