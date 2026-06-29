@@ -195,6 +195,68 @@ jobs:
     
       - name: Clone YTUHD
         run: git clone --quiet --depth=1 https://github.com/Tonwalter888/YTUHD.git
+
+      - name: Patch YTUHD for current Logos
+        run: |
+          python3 - <<'PY_PATCH'
+          from pathlib import Path
+
+          def replace_all(text, old, new, label):
+              count = text.count(old)
+              if count:
+                  print(f"Patching {label}: {count} occurrence(s)")
+                  return text.replace(old, new)
+              if new in text:
+                  print(f"{label} already patched")
+                  return text
+              print(f"::warning::Could not find {label}; upstream YTUHD may already have changed")
+              return text
+
+          replacements = [
+              (
+                  "Tweak.xm",
+                  "%orig(filteredFormats(formats));",
+                  "NSArray *formatsForOrig = filteredFormats(formats);" + chr(10) + "    %orig(formatsForOrig);",
+                  "Tweak.xm nested filteredFormats argument",
+              ),
+              (
+                  "Tweak.xm",
+                  "return filteredFormats(%orig);",
+                  "NSArray *originalFormats = %orig;" + chr(10) + "    return filteredFormats(originalFormats);",
+                  "Tweak.xm filteredFormats wrapping %orig",
+              ),
+              (
+                  "Filter.x",
+                  "%orig(filteredAlot(formats));",
+                  "NSArray *formatsForOrig = filteredAlot(formats);" + chr(10) + "    %orig(formatsForOrig);",
+                  "Filter.x nested filteredAlot argument",
+              ),
+              (
+                  "Filter.x",
+                  "return filteredAlot(%orig);",
+                  "NSArray *originalFormats = %orig;" + chr(10) + "    return filteredAlot(originalFormats);",
+                  "Filter.x filteredAlot wrapping %orig",
+              ),
+              (
+                  "Settings.x",
+                  "NSMutableArray *mutableCategories = %orig.mutableCopy;",
+                  "NSArray *categories = %orig;" + chr(10) + "    NSMutableArray *mutableCategories = categories.mutableCopy;",
+                  "Settings.x orderedCategories mutable copy",
+              ),
+              (
+                  "ReloadVideo.x",
+                  "return [tweakId isEqualToString:TweakKey] ? reloadIcon() : %orig;",
+                  "if ([tweakId isEqualToString:TweakKey]) return reloadIcon();" + chr(10) + "    return %orig;",
+                  "ReloadVideo.x ternary %orig",
+              ),
+          ]
+
+          for rel, old, new, label in replacements:
+              path = Path("YTUHD") / rel
+              text = path.read_text()
+              text = replace_all(text, old, new, label)
+              path.write_text(text)
+          PY_PATCH
            
       - name: Clone Return-YouTube-Dislikes
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/Return-YouTube-Dislikes.git
