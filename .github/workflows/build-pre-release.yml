@@ -136,7 +136,7 @@ jobs:
           cd YouPiP
           # 1) Settings.x: use message-send syntax to avoid incompatible-pointer-types
           #    error (-Werror) when %orig's return type is NSArray<NSNumber *>
-          sed -i '' 's|NSMutableArray \\*mutableCategories = %orig\\.mutableCopy;|NSMutableArray *mutableCategories = [%orig mutableCopy];|' Settings.x
+          sed -i '' 's|NSMutableArray \*mutableCategories = %orig\.mutableCopy;|NSMutableArray *mutableCategories = [%orig mutableCopy];|' Settings.x
           # 2) LegacyPiPCompat.x: wrap %orig in parens so Logos does not consume the
           #    following comma-separated args, which produced an unmatched '(' error
           sed -i '' 's|initPlayerPiPControllerIfNeeded(%orig,|initPlayerPiPControllerIfNeeded((%orig),|g' LegacyPiPCompat.x
