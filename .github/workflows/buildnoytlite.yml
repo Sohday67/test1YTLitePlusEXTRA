@@ -48,7 +48,6 @@ jobs:
         uses: levibostian/action-hide-sensitive-inputs@v1
         with:
           exclude_inputs: bundle_id,display_name,demc,ytvid
-          
       - name: Download and Validate IPA
         run: |
           wget "${{ inputs.ipa_url }}" --quiet --no-verbose -O youtube.ipa
@@ -75,7 +74,6 @@ jobs:
 
       - name: Clone Theos
         run: git clone --quiet --depth=1 --recurse-submodules https://github.com/theos/theos.git
-           
       - name: Download iOS SDK
         run: |
           git clone --quiet --depth=1 -n --filter=tree:0 https://github.com/Tonwalter888/iOS-SDKs.git
@@ -89,7 +87,6 @@ jobs:
           pipx install --force https://github.com/asdfzxcvbn/pyzule-rw/archive/main.zip
           wget --quiet --no-verbose "https://github.com/inoahdev/tbd/releases/download/2.2/tbd-mac" -O /usr/local/bin/tbd
           chmod +x /usr/local/bin/tbd 
-          
       - name: Clone Open in YouTube (Safari Extension)
         run: |
           git clone --quiet -n --depth=1 --filter=tree:0 https://github.com/BillyCurtis/OpenYouTubeSafariExtension.git
@@ -110,16 +107,28 @@ jobs:
 
       - name: Clone YouPiP
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/YouPiP.git
-    
+      - name: Patch YouPiP for newer clang (macOS 26 runner)
+        run: |
+          cd YouPiP
+          # 1) Settings.x: use message-send syntax to avoid incompatible-pointer-types
+          #    error (-Werror) when %orig's return type is NSArray<NSNumber *>
+          sed -i '' 's|NSMutableArray \\*mutableCategories = %orig\\.mutableCopy;|NSMutableArray *mutableCategories = [%orig mutableCopy];|' Settings.x
+          # 2) LegacyPiPCompat.x: wrap %orig in parens so Logos does not consume the
+          #    following comma-separated args, which produced an unmatched '(' error
+          sed -i '' 's|initPlayerPiPControllerIfNeeded(%orig,|initPlayerPiPControllerIfNeeded((%orig),|g' LegacyPiPCompat.x
+          # Show the patched lines for log visibility
+          echo '--- Settings.x patched lines ---'
+          grep -n 'mutableCategories' Settings.x || true
+          echo '--- LegacyPiPCompat.x patched lines ---'
+          grep -n 'initPlayerPiPControllerIfNeeded' LegacyPiPCompat.x || true
+
       - name: Clone YTUHD
         run: git clone --quiet --depth=1 https://github.com/Tonwalter888/YTUHD.git
-           
       - name: Clone Return-YouTube-Dislikes
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/Return-YouTube-Dislikes.git
 
       - name: Clone YouGroupSettings
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/YouGroupSettings.git
-           
       - name: Clone YTVideoOverlay
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/YTVideoOverlay.git
 
@@ -131,7 +140,6 @@ jobs:
 
       - name: Clone YTABConfig
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/YTABConfig.git
-                  
       - name: Clone YouQuality
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/YouQuality.git
 
@@ -203,7 +211,6 @@ jobs:
           make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
           mv packages/*.deb ${{ github.workspace }}/ytskipsilence.deb
 
-
       - name: Build YTABConfig
         run: |
           cd YTABConfig
@@ -246,7 +253,6 @@ jobs:
           cd YouShare
           make clean package DEBUG=0 FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
           mv packages/*.deb ${{ github.workspace }}/youshare.deb
-          
       - name: Build YTweaks
         run: |
           cd YTweaks
@@ -291,7 +297,6 @@ jobs:
       - name: Job Summary - Output the Draft Release Link
         run: |
           echo -e '### 🚀 Draft Release\n\nDraft release has been created successfully! You can view your release here: https://github.com/${{ github.repository }}/releases' >> $GITHUB_STEP_SUMMARY     
-          
       - name: Job Summary - Cleanup
         run: |
           echo -e '### 🧹 Cleanup\n\nYou can remove previous GitHub Actions run here: https://github.com/${{ github.repository }}/actions/workflows/delete-old-workflows-run.yml And if you want to delelte old draft releases you have then here: https://github.com/${{ github.repository }}/actions/workflows/delete-old-draft-releases.yml' >> $GITHUB_STEP_SUMMARY
