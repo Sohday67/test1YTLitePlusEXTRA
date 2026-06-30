@@ -107,21 +107,6 @@ jobs:
 
       - name: Clone YouPiP
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/YouPiP.git
-      - name: Patch YouPiP for newer clang (macOS 26 runner)
-        run: |
-          cd YouPiP
-          # 1) Settings.x: use message-send syntax to avoid incompatible-pointer-types
-          #    error (-Werror) when %orig's return type is NSArray<NSNumber *>
-          sed -i '' 's|NSMutableArray \*mutableCategories = %orig\.mutableCopy;|NSMutableArray *mutableCategories = [%orig mutableCopy];|' Settings.x
-          # 2) LegacyPiPCompat.x: wrap %orig in parens so Logos does not consume the
-          #    following comma-separated args, which produced an unmatched '(' error
-          sed -i '' 's|initPlayerPiPControllerIfNeeded(%orig,|initPlayerPiPControllerIfNeeded((%orig),|g' LegacyPiPCompat.x
-          # Show the patched lines for log visibility
-          echo '--- Settings.x patched lines ---'
-          grep -n 'mutableCategories' Settings.x || true
-          echo '--- LegacyPiPCompat.x patched lines ---'
-          grep -n 'initPlayerPiPControllerIfNeeded' LegacyPiPCompat.x || true
-
       - name: Clone YTUHD
         run: git clone --quiet --depth=1 https://github.com/Tonwalter888/YTUHD.git
       - name: Clone Return-YouTube-Dislikes
@@ -168,6 +153,110 @@ jobs:
       - name: Clone YTVideoErrorAlert
         if: ${{ inputs.ytvid }}
         run: git clone --quiet --depth=1 https://github.com/PoomSmart/YTVideoErrorAlert.git
+
+      - name: Patch YouPiP and YTVideoOverlay for newer Logos (macOS 26 runner)
+        run: |
+          python3 - <<'PYEOF'
+          from pathlib import Path
+          
+          def patch_file(filepath, fixes, label):
+              p = Path(filepath)
+              if not p.exists():
+                  print(f'[SKIP] {label}: file not found')
+                  return
+              s = p.read_text()
+              applied = False
+              for old, new in fixes:
+                  count = s.count(old)
+                  if count > 0:
+                      s = s.replace(old, new)
+                      applied = True
+                      print(f'[OK] {label}: applied {count}x fix for: {old[:70]}...')
+              if applied:
+                  p.write_text(s)
+              else:
+                  print(f'[SKIP] {label}: no patterns matched (already patched?)')
+              return applied
+          
+          # ============================================================
+          # YouPiP patches
+          # ============================================================
+          # Settings.x: %orig.mutableCopy -> temp var assignment
+          # (Logos misparses %orig.mutableCopy, consuming .mutableCopy
+          #  as part of %orig's custom-args syntax, producing 'expected identifier')
+          patch_file('YouPiP/Settings.x', [
+              ('NSMutableArray *mutableCategories = %orig.mutableCopy;',
+               'NSArray <NSNumber *> *orig = %orig;\n'
+               '    NSMutableArray *mutableCategories = orig.mutableCopy;'),
+          ], 'YouPiP/Settings.x')
+          
+          # LegacyPiPCompat.x: %orig followed by , delegate -> temp var
+          # (Logos consumes , delegate, nil) as %orig's args, producing
+          #  'expected )' after preprocessing)
+          patch_file('YouPiP/LegacyPiPCompat.x', [
+              ('return initPlayerPiPControllerIfNeeded((%orig), delegate, nil);',
+               'YTPlayerPIPController *orig = %orig;\n'
+               '    return initPlayerPiPControllerIfNeeded(orig, delegate, nil);'),
+              ('return initPlayerPiPControllerIfNeeded((%orig), delegate, parentResponder);',
+               'YTPlayerPIPController *orig = %orig;\n'
+               '    return initPlayerPiPControllerIfNeeded(orig, delegate, parentResponder);'),
+              # Original (unpatched) forms:
+              ('return initPlayerPiPControllerIfNeeded(%orig, delegate, nil);',
+               'YTPlayerPIPController *orig = %orig;\n'
+               '    return initPlayerPiPControllerIfNeeded(orig, delegate, nil);'),
+              ('return initPlayerPiPControllerIfNeeded(%orig, delegate, parentResponder);',
+               'YTPlayerPIPController *orig = %orig;\n'
+               '    return initPlayerPiPControllerIfNeeded(orig, delegate, parentResponder);'),
+          ], 'YouPiP/LegacyPiPCompat.x')
+          
+          # ============================================================
+          # YTVideoOverlay patches (same Logos %orig issues)
+          # ============================================================
+          # Tweak.x line ~409: %orig.mutableCopy (same as YouPiP/Settings.x)
+          patch_file('YTVideoOverlay/Tweak.x', [
+              ('NSMutableArray *mutableCategories = %orig.mutableCopy;',
+               'NSArray <NSNumber *> *orig = %orig;\n'
+               '    NSMutableArray *mutableCategories = orig.mutableCopy;'),
+              # Tweak.x lines ~241, 245: topControls(self, %orig) -> temp var
+              # (Logos consumes the closing ) as part of %orig's args)
+              ('return topControls(self, %orig);',
+               'NSMutableArray *orig = %orig;\n'
+               '    return topControls(self, orig);'),
+          ], 'YTVideoOverlay/Tweak.x')
+          
+          # ============================================================
+          # YTABConfig patches (same %orig.mutableCopy pattern as YouPiP)
+          # ============================================================
+          patch_file('YTABConfig/Settings.x', [
+              ('NSMutableArray *mutableCategories = %orig.mutableCopy;',
+               'NSArray <NSNumber *> *orig = %orig;\n'
+               '    NSMutableArray *mutableCategories = orig.mutableCopy;'),
+          ], 'YTABConfig/Settings.x')
+          
+          # ============================================================
+          # YTweaks patches (same %orig.mutableCopy pattern as YouPiP)
+          # ============================================================
+          patch_file('YTweaks/Settings.x', [
+              ('NSMutableArray *mutableCategories = %orig.mutableCopy;',
+               'NSArray <NSNumber *> *orig = %orig;\n'
+               '    NSMutableArray *mutableCategories = orig.mutableCopy;'),
+          ], 'YTweaks/Settings.x')
+          
+          # ============================================================
+          # Show patched lines for log visibility
+          # ============================================================
+          for fpath, label in [('YouPiP/Settings.x', 'YouPiP/Settings.x'),
+                                ('YouPiP/LegacyPiPCompat.x', 'YouPiP/LegacyPiPCompat.x'),
+                                ('YTVideoOverlay/Tweak.x', 'YTVideoOverlay/Tweak.x'),
+                                ('YTABConfig/Settings.x', 'YTABConfig/Settings.x'),
+                                ('YTweaks/Settings.x', 'YTweaks/Settings.x')]:
+              p = Path(fpath)
+              if p.exists():
+                  print(f'--- {label} (patched lines) ---')
+                  for i, line in enumerate(p.read_text().splitlines(), 1):
+                      if any(kw in line for kw in ['mutableCategories', 'initPlayerPiPControllerIfNeeded', 'topControls(self', 'orig = %orig', 'orig = _logos']):
+                          print(f'{i}: {line}')
+          PYEOF
 
       - name: Build YouPiP
         run: |
